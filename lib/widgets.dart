@@ -11,6 +11,10 @@ class Campo extends StatelessWidget {
     this.suffix,
     this.readOnly = false,
     this.onTap,
+    this.locked = false,
+    this.validator,
+    this.suffixIcon,
+    this.onChanged,
   });
 
   final String label;
@@ -20,6 +24,10 @@ class Campo extends StatelessWidget {
   final String? suffix;
   final bool readOnly;
   final VoidCallback? onTap;
+  final bool locked;
+  final String? Function(String?)? validator;
+  final Widget? suffixIcon;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +38,20 @@ class Campo extends StatelessWidget {
         children: [
           Text(label, style: const TextStyle(fontWeight: FontWeight.w600, color: CrediColors.texto)),
           const SizedBox(height: 8),
-          TextField(
+          TextFormField(
             controller: controller,
             obscureText: obscure,
             keyboardType: keyboard,
-            readOnly: readOnly,
+            readOnly: readOnly || locked,
             onTap: onTap,
-            decoration: InputDecoration(suffixText: suffix),
+            validator: validator,
+            onChanged: onChanged,
+            style: TextStyle(color: locked ? CrediColors.muted : CrediColors.texto),
+            decoration: InputDecoration(
+              suffixText: suffix,
+              suffixIcon: locked ? const Icon(Icons.lock_outline, size: 20) : suffixIcon,
+              fillColor: locked ? const Color(0xFFEEF0F4) : null,
+            ),
           ),
         ],
       ),
@@ -48,7 +63,7 @@ class BotonVino extends StatelessWidget {
   const BotonVino({super.key, required this.texto, required this.onPressed});
 
   final String texto;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -144,4 +159,27 @@ PreferredSizeWidget barra(String titulo, {List<Widget>? actions}) {
 
 void aviso(BuildContext context, String mensaje) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
+}
+
+class FiltroChip extends StatelessWidget {
+  const FiltroChip({super.key, required this.texto, required this.activo, required this.onTap});
+
+  final String texto;
+  final bool activo;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(texto),
+        selected: activo,
+        selectedColor: CrediColors.vinoOscuro,
+        labelStyle: TextStyle(color: activo ? Colors.white : CrediColors.texto, fontWeight: FontWeight.w700),
+        showCheckmark: false,
+        onSelected: (_) => onTap(),
+      ),
+    );
+  }
 }

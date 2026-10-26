@@ -4,6 +4,17 @@ enum EstadoPrestamo { activo, atrasado, cancelado }
 
 enum EstadoCuota { pendiente, pagada, vencida }
 
+enum TipoAviso { vencida, porVencer, pago }
+
+class Aviso {
+  Aviso({required this.tipo, required this.texto, required this.fecha, this.leido = false});
+
+  final TipoAviso tipo;
+  final String texto;
+  final String fecha;
+  bool leido;
+}
+
 class Cliente {
   Cliente({
     required this.id,
@@ -92,18 +103,33 @@ class Recordatorio {
     required this.motivo,
     required this.fecha,
     required this.hora,
+    this.cumplido = false,
   });
 
   final String titulo;
   final String motivo;
   final String fecha;
   final String hora;
+  bool cumplido;
 }
 
 class AppStore extends ChangeNotifier {
   String nombre = 'Rosa Delgado Chávez';
   String correo = 'rosa.delgado@prestamosya.pe';
   String telefono = '+51 987 654 321';
+    String clave = '12345678';
+
+  bool claveCorrecta(String v) => v == clave;
+
+  void cambiarClave(String nueva) {
+    clave = nueva;
+    notifyListeners();
+  }
+
+  void cambiarCorreo(String nuevo) {
+    correo = nuevo;
+    notifyListeners();
+  }
 
   final clientes = <Cliente>[
     Cliente(
@@ -198,10 +224,10 @@ class AppStore extends ChangeNotifier {
     ),
   ];
 
-  final pagos = <Pago>[
+    final pagos = <Pago>[
     Pago(clienteNombre: 'Rosa Delgado Chávez', detalle: '21/09 · Cuota #05', fecha: '21/09/2026', monto: 200),
-    Pago(clienteNombre: 'Jorge Ramos Silva', detalle: '19/09 · Cuota #01', fecha: '19/09/2026', monto: 150),
-    Pago(clienteNombre: 'Ana Quispe Mamani', detalle: '15/09 · Cuota #03', fecha: '15/09/2026', monto: 300),
+    Pago(clienteNombre: 'Ana Quispe Mamani', detalle: '02/08 · Cuota #02', fecha: '02/08/2026', monto: 250),
+    Pago(clienteNombre: 'Ana Quispe Mamani', detalle: '02/07 · Cuota #01', fecha: '02/07/2026', monto: 250),
   ];
 
   final recordatorios = <Recordatorio>[
@@ -219,6 +245,18 @@ class AppStore extends ChangeNotifier {
     ),
   ];
 
+  final avisos = <Aviso>[
+    Aviso(tipo: TipoAviso.porVencer, texto: 'Cuota #06 de Rosa Delgado vence el 25/09', fecha: '24/09/2026'),
+    Aviso(tipo: TipoAviso.vencida, texto: 'Cuota vencida de Luis Flores · préstamo #0210', fecha: '22/09/2026'),
+    Aviso(tipo: TipoAviso.pago, texto: 'Pago registrado: Jorge Ramos · S/ 150', fecha: '19/09/2026', leido: true),
+  ];
+
+  void marcarLeido(Aviso a) {
+    a.leido = true;
+    notifyListeners();
+  }
+
+
   Cliente clienteDe(String id) => clientes.firstWhere((c) => c.id == id);
 
   List<Prestamo> prestamosDe(String clienteId) =>
@@ -234,13 +272,59 @@ class AppStore extends ChangeNotifier {
     return 'ACTIVO';
   }
 
-  double get cobradoMes => 4850;
+     List<Pago> pagosEntre(DateTime? desde, DateTime? hasta) {
+    final l = pagos.where((p) {
+      if (desde == null && hasta == null) return true;
+      final d = parseFecha(p.fecha);
+      if (d == null) return false;
+      if (desde != null && d.isBefore(desde)) return false;
+      if (hasta != null && d.isAfter(hasta)) return false;
+      return true;
+    }).toList();
+    l.sort((a, b) => (parseFecha(b.fecha) ?? DateTime(2000)).compareTo(parseFecha(a.fecha) ?? DateTime(2000)));
+    return l;
+  }
+
+  double get cobradoMes {
+    final h = DateTime.now();
+    return pagosEntre(DateTime(h.year, h.month, 1), DateTime(h.year, h.month + 1, 0))
+        .fold<double>(0, (s, p) => s + p.monto);
+  }
+
+  double get totalCobrado => pagos.fold<double>(0, (s, p) => s + p.monto);
+
+  String get iniciales {
+    final p = nombre.trim().split(RegExp(r'\s+'));
+    if (p.length == 1) return p.first.substring(0, 1).toUpperCase();
+    return (p[0][0] + p[1][0]).toUpperCase();
+  }
+
   double get porCobrar =>
       prestamos.fold(0, (s, p) => s + p.saldo);
 
-  void actualizarPerfil({required String nombre, required String correo, required String telefono}) {
+  List<MapEntry<Prestamo, Cuota>> get cuotasPorCobrar {
+    final l = <MapEntry<Prestamo, Cuota>>[];
+    for (final p in prestamos.where((p) => p.estado != EstadoPrestamo.cancelado)) {
+      for (final c in p.cuotas.where((c) => c.estado != EstadoCuota.pagada)) {
+        l.add(MapEntry(p, c));
+      }
+    }
+    l.sort((a, b) {
+      final va = a.value.estado == EstadoCuota.vencida ? 0 : 1;
+      final vb = b.value.estado == EstadoCuota.vencida ? 0 : 1;
+      if (va != vb) return va.compareTo(vb);
+      return ordenFecha(a.value.fecha).compareTo(ordenFecha(b.value.fecha));
+    });
+    return l;
+  }
+
+  List<MapEntry<Prestamo, Cuota>> get proximasCuotas {
+    final vistos = <String>{};
+    return cuotasPorCobrar.where((e) => vistos.add(e.key.id)).toList();
+  }
+
+    void actualizarPerfil({required String nombre, required String telefono}) {
     this.nombre = nombre;
-    this.correo = correo;
     this.telefono = telefono;
     notifyListeners();
   }
@@ -309,6 +393,15 @@ class AppStore extends ChangeNotifier {
         monto: monto,
       ),
     );
+
+        avisos.insert(
+      0,
+      Aviso(
+        tipo: TipoAviso.pago,
+        texto: 'Pago registrado: ${clienteDe(prestamo.clienteId).nombre} · ${soles(monto)}',
+        fecha: fecha,
+      ),
+    );
     notifyListeners();
   }
 
@@ -317,8 +410,13 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void eliminarRecordatorio(int index) {
-    recordatorios.removeAt(index);
+    void eliminarRecordatorio(Recordatorio r) {
+    recordatorios.remove(r);
+    notifyListeners();
+  }
+
+  void alternarCumplido(Recordatorio r) {
+    r.cumplido = !r.cumplido;
     notifyListeners();
   }
 
@@ -350,3 +448,44 @@ String etiquetaEstado(EstadoPrestamo e) {
       return 'CANCELADO';
   }
 }
+
+String? vNombre(String? v) =>
+    (v ?? '').trim().length < 3 ? 'Ingresa tu nombre completo' : null;
+
+String? vTelefono(String? v) {
+  final d = (v ?? '').replaceAll(RegExp(r'\D'), '');
+  final ok = d.length == 9 || (d.length == 11 && d.startsWith('51'));
+  return ok ? null : 'Teléfono inválido (9 dígitos)';
+}
+
+String? vCorreo(String? v) =>
+    RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch((v ?? '').trim()) ? null : 'Correo inválido';
+
+String? vClaveNueva(String? v) {
+  final t = v ?? '';
+  if (t.length < 8) return 'Mínimo 8 caracteres';
+  if (!RegExp(r'[A-Z]').hasMatch(t)) return 'Incluye una mayúscula';
+  if (!RegExp(r'\d').hasMatch(t)) return 'Incluye un número';
+  if (!RegExp(r'[^A-Za-z0-9]').hasMatch(t)) return 'Incluye un símbolo';
+  return null;
+}
+
+int ordenFecha(String f) {
+  final m = RegExp(r'^(\d{1,2})/(\d{1,2})').firstMatch(f);
+  if (m == null) return 9999;
+  return int.parse(m.group(2)!) * 100 + int.parse(m.group(1)!);
+}
+
+String hoyTexto() {
+  final d = DateTime.now();
+  return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+}
+
+DateTime? parseFecha(String f) {
+  final m = RegExp(r'^(\d{1,2})[/-](\d{1,2})[/-](\d{4})').firstMatch(f.trim());
+  if (m == null) return null;
+  return DateTime(int.parse(m.group(3)!), int.parse(m.group(2)!), int.parse(m.group(1)!));
+}
+
+String fechaTexto(DateTime d) =>
+    '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';  
