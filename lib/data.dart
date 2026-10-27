@@ -7,7 +7,12 @@ enum EstadoCuota { pendiente, pagada, vencida }
 enum TipoAviso { vencida, porVencer, pago }
 
 class Aviso {
-  Aviso({required this.tipo, required this.texto, required this.fecha, this.leido = false});
+  Aviso({
+    required this.tipo,
+    required this.texto,
+    required this.fecha,
+    this.leido = false,
+  });
 
   final TipoAviso tipo;
   final String texto;
@@ -117,7 +122,7 @@ class AppStore extends ChangeNotifier {
   String nombre = 'Rosa Delgado Chávez';
   String correo = 'rosa.delgado@prestamosya.pe';
   String telefono = '+51 987 654 321';
-    String clave = '12345678';
+  String clave = '12345678';
 
   bool claveCorrecta(String v) => v == clave;
 
@@ -173,10 +178,30 @@ class AppStore extends ChangeNotifier {
       fecha: '21/09/2026',
       estado: EstadoPrestamo.activo,
       cuotas: [
-        Cuota(numero: 5, fecha: '18/09', monto: 200, estado: EstadoCuota.pagada),
-        Cuota(numero: 6, fecha: '25/09', monto: 200, estado: EstadoCuota.pendiente),
-        Cuota(numero: 7, fecha: '02/10', monto: 200, estado: EstadoCuota.pendiente),
-        Cuota(numero: 8, fecha: '09/10', monto: 200, estado: EstadoCuota.pendiente),
+        Cuota(
+          numero: 5,
+          fecha: '18/09',
+          monto: 200,
+          estado: EstadoCuota.pagada,
+        ),
+        Cuota(
+          numero: 6,
+          fecha: '25/09',
+          monto: 200,
+          estado: EstadoCuota.pendiente,
+        ),
+        Cuota(
+          numero: 7,
+          fecha: '02/10',
+          monto: 200,
+          estado: EstadoCuota.pendiente,
+        ),
+        Cuota(
+          numero: 8,
+          fecha: '09/10',
+          monto: 200,
+          estado: EstadoCuota.pendiente,
+        ),
       ],
     ),
     Prestamo(
@@ -189,8 +214,18 @@ class AppStore extends ChangeNotifier {
       fecha: '01/09/2026',
       estado: EstadoPrestamo.atrasado,
       cuotas: [
-        Cuota(numero: 1, fecha: '15/09', monto: 80, estado: EstadoCuota.vencida),
-        Cuota(numero: 2, fecha: '30/09', monto: 70, estado: EstadoCuota.pendiente),
+        Cuota(
+          numero: 1,
+          fecha: '15/09',
+          monto: 80,
+          estado: EstadoCuota.vencida,
+        ),
+        Cuota(
+          numero: 2,
+          fecha: '30/09',
+          monto: 70,
+          estado: EstadoCuota.pendiente,
+        ),
       ],
     ),
     Prestamo(
@@ -203,8 +238,18 @@ class AppStore extends ChangeNotifier {
       fecha: '02/06/2026',
       estado: EstadoPrestamo.cancelado,
       cuotas: [
-        Cuota(numero: 1, fecha: '02/07', monto: 250, estado: EstadoCuota.pagada),
-        Cuota(numero: 2, fecha: '02/08', monto: 250, estado: EstadoCuota.pagada),
+        Cuota(
+          numero: 1,
+          fecha: '02/07',
+          monto: 250,
+          estado: EstadoCuota.pagada,
+        ),
+        Cuota(
+          numero: 2,
+          fecha: '02/08',
+          monto: 250,
+          estado: EstadoCuota.pagada,
+        ),
       ],
     ),
     Prestamo(
@@ -217,17 +262,47 @@ class AppStore extends ChangeNotifier {
       fecha: '10/09/2026',
       estado: EstadoPrestamo.atrasado,
       cuotas: [
-        Cuota(numero: 1, fecha: '17/09', monto: 100, estado: EstadoCuota.vencida),
-        Cuota(numero: 2, fecha: '24/09', monto: 100, estado: EstadoCuota.pendiente),
-        Cuota(numero: 3, fecha: '01/10', monto: 100, estado: EstadoCuota.pendiente),
+        Cuota(
+          numero: 1,
+          fecha: '17/09',
+          monto: 100,
+          estado: EstadoCuota.vencida,
+        ),
+        Cuota(
+          numero: 2,
+          fecha: '24/09',
+          monto: 100,
+          estado: EstadoCuota.pendiente,
+        ),
+        Cuota(
+          numero: 3,
+          fecha: '01/10',
+          monto: 100,
+          estado: EstadoCuota.pendiente,
+        ),
       ],
     ),
   ];
 
-    final pagos = <Pago>[
-    Pago(clienteNombre: 'Rosa Delgado Chávez', detalle: '21/09 · Cuota #05', fecha: '21/09/2026', monto: 200),
-    Pago(clienteNombre: 'Ana Quispe Mamani', detalle: '02/08 · Cuota #02', fecha: '02/08/2026', monto: 250),
-    Pago(clienteNombre: 'Ana Quispe Mamani', detalle: '02/07 · Cuota #01', fecha: '02/07/2026', monto: 250),
+  final pagos = <Pago>[
+    Pago(
+      clienteNombre: 'Rosa Delgado Chávez',
+      detalle: '21/09 · Cuota #05',
+      fecha: '21/09/2026',
+      monto: 200,
+    ),
+    Pago(
+      clienteNombre: 'Ana Quispe Mamani',
+      detalle: '02/08 · Cuota #02',
+      fecha: '02/08/2026',
+      monto: 250,
+    ),
+    Pago(
+      clienteNombre: 'Ana Quispe Mamani',
+      detalle: '02/07 · Cuota #01',
+      fecha: '02/07/2026',
+      monto: 250,
+    ),
   ];
 
   final recordatorios = <Recordatorio>[
@@ -246,16 +321,28 @@ class AppStore extends ChangeNotifier {
   ];
 
   final avisos = <Aviso>[
-    Aviso(tipo: TipoAviso.porVencer, texto: 'Cuota #06 de Rosa Delgado vence el 25/09', fecha: '24/09/2026'),
-    Aviso(tipo: TipoAviso.vencida, texto: 'Cuota vencida de Luis Flores · préstamo #0210', fecha: '22/09/2026'),
-    Aviso(tipo: TipoAviso.pago, texto: 'Pago registrado: Jorge Ramos · S/ 150', fecha: '19/09/2026', leido: true),
+    Aviso(
+      tipo: TipoAviso.porVencer,
+      texto: 'Cuota #06 de Rosa Delgado vence el 25/09',
+      fecha: '24/09/2026',
+    ),
+    Aviso(
+      tipo: TipoAviso.vencida,
+      texto: 'Cuota vencida de Luis Flores · préstamo #0210',
+      fecha: '22/09/2026',
+    ),
+    Aviso(
+      tipo: TipoAviso.pago,
+      texto: 'Pago registrado: Jorge Ramos · S/ 150',
+      fecha: '19/09/2026',
+      leido: true,
+    ),
   ];
 
   void marcarLeido(Aviso a) {
     a.leido = true;
     notifyListeners();
   }
-
 
   Cliente clienteDe(String id) => clientes.firstWhere((c) => c.id == id);
 
@@ -264,15 +351,17 @@ class AppStore extends ChangeNotifier {
 
   String estadoCliente(Cliente c) {
     final lista = prestamosDe(c.id);
-    if (lista.any((p) => p.estado == EstadoPrestamo.atrasado)) return 'ATRASADO';
+    if (lista.any((p) => p.estado == EstadoPrestamo.atrasado))
+      return 'ATRASADO';
     if (lista.any((p) => p.estado == EstadoPrestamo.activo)) return 'ACTIVO';
-    if (lista.isEmpty || lista.every((p) => p.estado == EstadoPrestamo.cancelado)) {
+    if (lista.isEmpty ||
+        lista.every((p) => p.estado == EstadoPrestamo.cancelado)) {
       return 'SIN PRÉST.';
     }
     return 'ACTIVO';
   }
 
-     List<Pago> pagosEntre(DateTime? desde, DateTime? hasta) {
+  List<Pago> pagosEntre(DateTime? desde, DateTime? hasta) {
     final l = pagos.where((p) {
       if (desde == null && hasta == null) return true;
       final d = parseFecha(p.fecha);
@@ -281,14 +370,20 @@ class AppStore extends ChangeNotifier {
       if (hasta != null && d.isAfter(hasta)) return false;
       return true;
     }).toList();
-    l.sort((a, b) => (parseFecha(b.fecha) ?? DateTime(2000)).compareTo(parseFecha(a.fecha) ?? DateTime(2000)));
+    l.sort(
+      (a, b) => (parseFecha(b.fecha) ?? DateTime(2000)).compareTo(
+        parseFecha(a.fecha) ?? DateTime(2000),
+      ),
+    );
     return l;
   }
 
   double get cobradoMes {
     final h = DateTime.now();
-    return pagosEntre(DateTime(h.year, h.month, 1), DateTime(h.year, h.month + 1, 0))
-        .fold<double>(0, (s, p) => s + p.monto);
+    return pagosEntre(
+      DateTime(h.year, h.month, 1),
+      DateTime(h.year, h.month + 1, 0),
+    ).fold<double>(0, (s, p) => s + p.monto);
   }
 
   double get totalCobrado => pagos.fold<double>(0, (s, p) => s + p.monto);
@@ -299,12 +394,13 @@ class AppStore extends ChangeNotifier {
     return (p[0][0] + p[1][0]).toUpperCase();
   }
 
-  double get porCobrar =>
-      prestamos.fold(0, (s, p) => s + p.saldo);
+  double get porCobrar => prestamos.fold(0, (s, p) => s + p.saldo);
 
   List<MapEntry<Prestamo, Cuota>> get cuotasPorCobrar {
     final l = <MapEntry<Prestamo, Cuota>>[];
-    for (final p in prestamos.where((p) => p.estado != EstadoPrestamo.cancelado)) {
+    for (final p in prestamos.where(
+      (p) => p.estado != EstadoPrestamo.cancelado,
+    )) {
       for (final c in p.cuotas.where((c) => c.estado != EstadoCuota.pagada)) {
         l.add(MapEntry(p, c));
       }
@@ -323,7 +419,7 @@ class AppStore extends ChangeNotifier {
     return cuotasPorCobrar.where((e) => vistos.add(e.key.id)).toList();
   }
 
-    void actualizarPerfil({required String nombre, required String telefono}) {
+  void actualizarPerfil({required String nombre, required String telefono}) {
     this.nombre = nombre;
     this.telefono = telefono;
     notifyListeners();
@@ -334,7 +430,11 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void editarCliente(Cliente c, {required String telefono, required String direccion}) {
+  void editarCliente(
+    Cliente c, {
+    required String telefono,
+    required String direccion,
+  }) {
     c.telefono = telefono;
     c.direccion = direccion;
     notifyListeners();
@@ -375,7 +475,12 @@ class AppStore extends ChangeNotifier {
     return p;
   }
 
-  void registrarPago(Prestamo prestamo, Cuota cuota, double monto, String fecha) {
+  void registrarPago(
+    Prestamo prestamo,
+    Cuota cuota,
+    double monto,
+    String fecha,
+  ) {
     cuota.estado = EstadoCuota.pagada;
     if (prestamo.cuotas.every((c) => c.estado == EstadoCuota.pagada)) {
       prestamo.estado = EstadoPrestamo.cancelado;
@@ -394,11 +499,12 @@ class AppStore extends ChangeNotifier {
       ),
     );
 
-        avisos.insert(
+    avisos.insert(
       0,
       Aviso(
         tipo: TipoAviso.pago,
-        texto: 'Pago registrado: ${clienteDe(prestamo.clienteId).nombre} · ${soles(monto)}',
+        texto:
+            'Pago registrado: ${clienteDe(prestamo.clienteId).nombre} · ${soles(monto)}',
         fecha: fecha,
       ),
     );
@@ -410,7 +516,7 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
   }
 
-    void eliminarRecordatorio(Recordatorio r) {
+  void eliminarRecordatorio(Recordatorio r) {
     recordatorios.remove(r);
     notifyListeners();
   }
@@ -449,8 +555,27 @@ String etiquetaEstado(EstadoPrestamo e) {
   }
 }
 
-String? vNombre(String? v) =>
-    (v ?? '').trim().length < 3 ? 'Ingresa tu nombre completo' : null;
+String? vNombre(String? v) {
+  final nombre = (v ?? '').trim();
+
+  if (nombre.isEmpty) {
+    return 'Ingresa tu nombre completo';
+  }
+
+  if (nombre.length < 3) {
+    return 'El nombre debe tener al menos 3 caracteres';
+  }
+
+  final nombreValido = RegExp(
+    r"^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ]+(?:[\s'-][a-zA-ZáéíóúÁÉÍÓÚüÜñÑ]+)*$",
+  ).hasMatch(nombre);
+
+  if (!nombreValido) {
+    return 'El nombre solo debe contener letras';
+  }
+
+  return null;
+}
 
 String? vTelefono(String? v) {
   final d = (v ?? '').replaceAll(RegExp(r'\D'), '');
@@ -459,7 +584,9 @@ String? vTelefono(String? v) {
 }
 
 String? vCorreo(String? v) =>
-    RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch((v ?? '').trim()) ? null : 'Correo inválido';
+    RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch((v ?? '').trim())
+    ? null
+    : 'Correo inválido';
 
 String? vClaveNueva(String? v) {
   final t = v ?? '';
@@ -484,8 +611,12 @@ String hoyTexto() {
 DateTime? parseFecha(String f) {
   final m = RegExp(r'^(\d{1,2})[/-](\d{1,2})[/-](\d{4})').firstMatch(f.trim());
   if (m == null) return null;
-  return DateTime(int.parse(m.group(3)!), int.parse(m.group(2)!), int.parse(m.group(1)!));
+  return DateTime(
+    int.parse(m.group(3)!),
+    int.parse(m.group(2)!),
+    int.parse(m.group(1)!),
+  );
 }
 
 String fechaTexto(DateTime d) =>
-    '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';  
+    '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';

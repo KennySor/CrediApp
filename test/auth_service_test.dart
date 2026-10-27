@@ -95,12 +95,14 @@ void main() {
     });
 
     test('CP02 - Correo duplicado (A1)', () async {
-      repositorio.guardar(Usuario(
-        id: 'u1',
-        nombre: 'Existente',
-        correo: 'prestamista@correo.com',
-        clave: 'Clave123!',
-      ));
+      repositorio.guardar(
+        Usuario(
+          id: 'u1',
+          nombre: 'Existente',
+          correo: 'prestamista@correo.com',
+          clave: 'Clave123!',
+        ),
+      );
 
       final resultado = await auth.registrar(
         nombre: 'Otro Usuario',
@@ -113,31 +115,47 @@ void main() {
       expect(resultado.idUsuario, isNull);
     });
 
-    test('CP04 - Todo sale mal: pérdida de conexión al guardar (TSM)', () async {
-      repositorio.simularFalloConexion = true;
-
+    test('CP05 - Datos inválidos: no se crea la cuenta', () async {
       final resultado = await auth.registrar(
-        nombre: 'Rosa Delgado',
-        correo: 'prestamista@correo.com',
-        clave: 'Clave123!',
+        nombre: 'Al',
+        correo: 'correo-invalido',
+        clave: '123',
       );
 
-      expect(resultado.estado, EstadoRegistro.errorConexion);
-      expect(
-        resultado.mensaje,
-        'Error crítico de conexión con el servidor: formulario bloqueado',
-      );
+      expect(resultado.estado, EstadoRegistro.datosInvalidos);
+      expect(await repositorio.buscarPorCorreo('correo-invalido'), isNull);
     });
+
+    test(
+      'CP04 - Todo sale mal: pérdida de conexión al guardar (TSM)',
+      () async {
+        repositorio.simularFalloConexion = true;
+
+        final resultado = await auth.registrar(
+          nombre: 'Rosa Delgado',
+          correo: 'prestamista@correo.com',
+          clave: 'Clave123!',
+        );
+
+        expect(resultado.estado, EstadoRegistro.errorConexion);
+        expect(
+          resultado.mensaje,
+          'Error crítico de conexión con el servidor: formulario bloqueado',
+        );
+      },
+    );
   });
 
   group('RF002 - Inicio de sesión', () {
     test('CP01 - Flujo exitoso: inicio de sesión (E1)', () async {
-      repositorio.guardar(Usuario(
-        id: 'u1',
-        nombre: 'Rosa Delgado',
-        correo: 'prestamista@correo.com',
-        clave: 'Clave123!',
-      ));
+      repositorio.guardar(
+        Usuario(
+          id: 'u1',
+          nombre: 'Rosa Delgado',
+          correo: 'prestamista@correo.com',
+          clave: 'Clave123!',
+        ),
+      );
 
       final resultado = await auth.iniciarSesion(
         correo: 'prestamista@correo.com',
@@ -191,36 +209,43 @@ void main() {
       expect(resultado.token, isNull);
     });
 
-    test('CP04 - Todo sale mal: servidor de autenticación sin respuesta (TSM)', () async {
-      repositorio.guardar(Usuario(
-        id: 'u1',
-        nombre: 'Rosa Delgado',
-        correo: 'prestamista@correo.com',
-        clave: 'Clave123!',
-      ));
-      repositorio.simularFalloConexion = true;
+    test(
+      'CP04 - Todo sale mal: servidor de autenticación sin respuesta (TSM)',
+      () async {
+        repositorio.guardar(
+          Usuario(
+            id: 'u1',
+            nombre: 'Rosa Delgado',
+            correo: 'prestamista@correo.com',
+            clave: 'Clave123!',
+          ),
+        );
+        repositorio.simularFalloConexion = true;
 
-      final resultado = await auth.iniciarSesion(
-        correo: 'prestamista@correo.com',
-        clave: 'Clave123!',
-      );
+        final resultado = await auth.iniciarSesion(
+          correo: 'prestamista@correo.com',
+          clave: 'Clave123!',
+        );
 
-      expect(resultado.estado, EstadoLogin.errorServidor);
-      expect(
-        resultado.mensaje,
-        'Pantalla congelada en la carga sin ningún mensaje de error',
-      );
-    });
+        expect(resultado.estado, EstadoLogin.errorServidor);
+        expect(
+          resultado.mensaje,
+          'Pantalla congelada en la carga sin ningún mensaje de error',
+        );
+      },
+    );
   });
 
   group('RF003 - Cierre de sesión', () {
     test('CP01 - Flujo exitoso: cierre de sesión (E1)', () async {
-      repositorio.guardar(Usuario(
-        id: 'u1',
-        nombre: 'Rosa',
-        correo: 'prestamista@correo.com',
-        clave: 'Clave123!',
-      ));
+      repositorio.guardar(
+        Usuario(
+          id: 'u1',
+          nombre: 'Rosa',
+          correo: 'prestamista@correo.com',
+          clave: 'Clave123!',
+        ),
+      );
       final login = await auth.iniciarSesion(
         correo: 'prestamista@correo.com',
         clave: 'Clave123!',
@@ -248,12 +273,14 @@ void main() {
     });
 
     test('CP04 - Todo sale mal: timeout al invalidar (TSM)', () async {
-      repositorio.guardar(Usuario(
-        id: 'u1',
-        nombre: 'Rosa',
-        correo: 'prestamista@correo.com',
-        clave: 'Clave123!',
-      ));
+      repositorio.guardar(
+        Usuario(
+          id: 'u1',
+          nombre: 'Rosa',
+          correo: 'prestamista@correo.com',
+          clave: 'Clave123!',
+        ),
+      );
       final login = await auth.iniciarSesion(
         correo: 'prestamista@correo.com',
         clave: 'Clave123!',
