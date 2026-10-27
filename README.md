@@ -55,11 +55,47 @@ El APK queda en:
 
 ```text
 lib/
-  main.dart      # entrada de la app
-  theme.dart     # colores y tema CrediAPP
-  data.dart      # modelos y datos demo
-  widgets.dart   # componentes reutilizables
-  screens.dart   # pantallas del prototipo
+  main.dart         # entrada de la app
+  theme.dart        # colores y tema CrediAPP
+  data.dart         # modelos y datos demo
+  widgets.dart      # componentes reutilizables
+  screens.dart      # pantallas del prototipo
+  auth_service.dart # Control TDD (reglas RF001/RF002/RF003)
+test/
+  auth_service_test.dart  # CP del Excel (Arrange-Act-Assert)
+```
+
+## TDD (como el ejemplo de la profesora)
+
+Misma idea que `tdd-cajero/flutter-dart`:
+
+1. **Service (Control)** = reglas de negocio
+2. **Repository (DAO)** = acceso a datos
+3. **FakeRepository** = falso en memoria (solo tests)
+4. Cada test ≈ filas del Excel `Casos_de_Prueba_RF001_RF050...`
+
+### Archivos TDD
+
+```text
+lib/
+  auth_service.dart
+  tdd/
+    tdd_common.dart
+    recuperacion_service.dart   # RF004-RF005
+    cliente_service.dart        # RF006-RF011
+    prestamo_service.dart       # RF012-RF024 + RF049-RF050
+    pago_service.dart           # RF025-RF037
+    recordatorio_service.dart   # RF038-RF043
+    panel_service.dart          # RF044-RF048
+test/
+  auth_service_test.dart
+  tdd/all_rf_tdd_test.dart
+```
+
+Correr todos los tests TDD:
+
+```bash
+flutter test test/auth_service_test.dart test/tdd/all_rf_tdd_test.dart
 ```
 
 ## Curso
