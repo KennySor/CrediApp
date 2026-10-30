@@ -1,9 +1,19 @@
+
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'data.dart';
 import 'screens.dart';
 import 'theme.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://ijlqgyvjqnrdinolekil.supabase.co',
+    publishableKey: 'sb_publishable_7krO34CKxmKQxdYeQwtbxQ_DOnd1xrG',
+  );
+
   runApp(const CrediApp());
 }
 

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
-enum EstadoPrestamo { activo, atrasado, cancelado }
+enum EstadoPrestamo {
+  activo,
+  atrasado,
+  cancelado,
+  finalizado,
+}
 
 enum EstadoCuota { pendiente, pagada, vencida }
 
@@ -36,9 +41,17 @@ class Cliente {
   String direccion;
 
   String get iniciales {
-    final partes = nombre.trim().split(RegExp(r'\s+'));
-    if (partes.length == 1) return partes.first.substring(0, 1).toUpperCase();
-    return (partes.first[0] + partes[1][0]).toUpperCase();
+    final texto = nombre.trim();
+
+    if (texto.isEmpty) return '?';
+
+    final partes = texto.split(RegExp(r'\s+'));
+
+    if (partes.length == 1) {
+      return partes.first[0].toUpperCase();
+    }
+
+    return (partes[0][0] + partes[1][0]).toUpperCase();
   }
 }
 
@@ -48,12 +61,19 @@ class Cuota {
     required this.fecha,
     required this.monto,
     required this.estado,
+    this.id,
+    this.montoPagado = 0,
   });
 
-  final int numero;
-  final String fecha;
-  final double monto;
-  EstadoCuota estado;
+ final String? id;
+final int numero;
+final String fecha;
+final double monto;
+double montoPagado;
+EstadoCuota estado;
+
+double get saldoPendiente =>
+    (monto - montoPagado).clamp(0.0, monto).toDouble();
 }
 
 class Prestamo {
@@ -81,9 +101,7 @@ class Prestamo {
   final List<Cuota> cuotas;
   final List<String> observaciones;
 
-  double get saldo => cuotas
-      .where((c) => c.estado != EstadoCuota.pagada)
-      .fold(0, (s, c) => s + c.monto);
+  double get saldo => cuotas.fold<double>(0, (s, c) => s + c.saldoPendiente);
 
   int get pagadas => cuotas.where((c) => c.estado == EstadoCuota.pagada).length;
 }
@@ -94,12 +112,16 @@ class Pago {
     required this.detalle,
     required this.fecha,
     required this.monto,
+    this.prestamoId,
+    this.cuotaNumero,
   });
 
   final String clienteNombre;
   final String detalle;
   final String fecha;
   final double monto;
+  final String? prestamoId;
+  final int? cuotaNumero;
 }
 
 class Recordatorio {
@@ -109,8 +131,12 @@ class Recordatorio {
     required this.fecha,
     required this.hora,
     this.cumplido = false,
+    this.id,
+    this.prestamoId,
   });
 
+  final String? id;
+  final String? prestamoId;
   final String titulo;
   final String motivo;
   final String fecha;
@@ -119,11 +145,26 @@ class Recordatorio {
 }
 
 class AppStore extends ChangeNotifier {
-  String nombre = 'Rosa Delgado Chávez';
-  String correo = 'rosa.delgado@prestamosya.pe';
-  String telefono = '+51 987 654 321';
-  String clave = '12345678';
+  AppStore({
+    this.nombre = '',
+    this.correo = '',
+    this.telefono = '',
+    this.clave = '',
+    bool datosDemo = false,
+  }) {
+    if (!datosDemo) {
+      clientes.clear();
+      prestamos.clear();
+      pagos.clear();
+      recordatorios.clear();
+      avisos.clear();
+    }
+  }
 
+  String nombre;
+  String correo;
+  String telefono;
+  String clave;
   bool claveCorrecta(String v) => v == clave;
 
   void cambiarClave(String nueva) {
@@ -389,9 +430,22 @@ class AppStore extends ChangeNotifier {
   double get totalCobrado => pagos.fold<double>(0, (s, p) => s + p.monto);
 
   String get iniciales {
-    final p = nombre.trim().split(RegExp(r'\s+'));
-    if (p.length == 1) return p.first.substring(0, 1).toUpperCase();
-    return (p[0][0] + p[1][0]).toUpperCase();
+    final texto = nombre.trim();
+
+    if (texto.isEmpty) return '?';
+
+    final partes = texto
+        .split(RegExp(r'\s+'))
+        .where((parte) => parte.isNotEmpty)
+        .toList();
+
+    if (partes.isEmpty) return '?';
+
+    if (partes.length == 1) {
+      return partes.first[0].toUpperCase();
+    }
+
+    return (partes[0][0] + partes[1][0]).toUpperCase();
   }
 
   double get porCobrar => prestamos.fold(0, (s, p) => s + p.saldo);
@@ -447,9 +501,11 @@ class AppStore extends ChangeNotifier {
     required int nCuotas,
     required String frecuencia,
     required String fecha,
+    String? id,
+    List<Cuota>? cuotasGeneradas,
   }) {
     final cuota = (monto * (1 + tasa / 100)) / nCuotas;
-    final cuotas = List.generate(
+    final cuotas = cuotasGeneradas ?? List.generate(
       nCuotas,
       (i) => Cuota(
         numero: i + 1,
@@ -460,7 +516,7 @@ class AppStore extends ChangeNotifier {
     );
     final codigo = (700 + prestamos.length).toString().padLeft(4, '0');
     final p = Prestamo(
-      id: 'p${prestamos.length + 1}',
+      id: id ?? 'p${prestamos.length + 1}',
       codigo: codigo,
       clienteId: clienteId,
       monto: monto,
@@ -542,19 +598,48 @@ String soles(num valor) {
   return partes.length == 1 ? 'S/ $entero' : 'S/ $entero.${partes[1]}';
 }
 
-final store = AppStore();
+final AppStore _storeRosa = AppStore(
+  nombre: 'Rosa Delgado Chávez',
+  correo: 'rosa.delgado@prestamosya.pe',
+  telefono: '+51 987 654 321',
+  clave: '12345678',
+  datosDemo: true,
+);
+
+final Map<String, AppStore> _storesPorUsuario = {};
+
+AppStore _storeActual = _storeRosa;
+
+AppStore get store => _storeActual;
+
+void seleccionarStoreParaUsuario(String correo) {
+  final email = correo.trim().toLowerCase();
+
+  if (email == 'rosa.delgado@prestamosya.pe') {
+    _storeActual = _storeRosa;
+  } else {
+    _storeActual = _storesPorUsuario.putIfAbsent(
+      email,
+      () => AppStore(nombre: '', correo: email, telefono: '', clave: ''),
+    );
+  }
+}
 
 String etiquetaEstado(EstadoPrestamo e) {
   switch (e) {
     case EstadoPrestamo.activo:
       return 'ACTIVO';
+
     case EstadoPrestamo.atrasado:
       return 'ATRASADO';
+
     case EstadoPrestamo.cancelado:
       return 'CANCELADO';
+
+    case EstadoPrestamo.finalizado:
+      return 'FINALIZADO';
   }
 }
-
 String? vNombre(String? v) {
   final nombre = (v ?? '').trim();
 
